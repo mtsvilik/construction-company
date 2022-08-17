@@ -13,6 +13,30 @@ public class Human implements IMove {
     private String firstName;
     private String lastName;
     private LocalDate dob;
+    private Gender gender;
+    private FamilyStatus status;
+
+    public enum Gender {
+        MALE("man"), FEMALE("woman");
+
+        private String genderName;
+
+        Gender(String genderName) {
+            this.genderName = genderName;
+        }
+
+        public void showGenderName() {
+            LOGGER.info("Gender's name - {} ", getGenderName());
+        }
+
+        public String getGenderName() {
+            return genderName;
+        }
+
+        public void setGenderName(String genderName) {
+            this.genderName = genderName;
+        }
+    }
 
     public Human(String firstName, String lastName, LocalDate dob) {
         this.firstName = firstName;
@@ -60,6 +84,22 @@ public class Human implements IMove {
 
     public void setDob(LocalDate dob) {
         this.dob = dob;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public FamilyStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(FamilyStatus status) {
+        this.status = status;
     }
 
     @Override

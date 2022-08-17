@@ -26,6 +26,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
+import static com.solvd.constructioncompany.human.HumanUtils.*;
+import static com.solvd.constructioncompany.materialresource.MaterialResourceUtils.displayColor;
+import static com.solvd.constructioncompany.materialresource.MaterialResourceUtils.showColor;
+
 public class MainClass {
 
     private static final Logger LOGGER = LogManager.getLogger(MainClass.class);
@@ -109,43 +113,63 @@ public class MainClass {
         customer1.setPassport(passport1);
         customer1.setBudget(BigDecimal.valueOf(170000));
         customer1.showBudget();
+        customer1.setGender(Human.Gender.MALE);
+        customer1.getGender().showGenderName();
+        displayGender(customer1);
+        LOGGER.info("Ivan Petrov's gender is - {} ", customer1.getGender());
 
         Customer customer2 = new Customer("Olga", "Ivanova", LocalDate.of(1977, 5, 8));
         customer2.setAddress(address5);
         customer2.setPassport(passport2);
         customer2.setBudget(BigDecimal.valueOf(51000));
         customer2.showBudget();
+        customer2.setGender(Human.Gender.FEMALE);
+        showGender(customer1);
+        LOGGER.info("Olga Ivanova's gender is - {} ", customer2.getGender());
 
         Customer customer3 = new Customer("Irina", "Maksimova", LocalDate.of(1960, 3, 24));
         customer3.setAddress(address7);
         customer3.setPassport(passport5);
         customer3.setBudget(BigDecimal.valueOf(100000));
         customer3.showBudget();
-        LOGGER.info("---------------------------------");
+        customer3.setStatus(FamilyStatus.DIVORCED);
+        displayFamilyStatus(customer3);
 
         Employee sergeyJukov = new Employee("Sergey", "Jukov", LocalDate.of(1988, 12, 1));
         sergeyJukov.setAddress(address2);
         sergeyJukov.setPassport(passport3);
         sergeyJukov.setPosition("Advertising manager");
         sergeyJukov.setSalary(BigDecimal.valueOf(2000));
+        sergeyJukov.setGender(Human.Gender.MALE);
+        sergeyJukov.getGender().showGenderName();
+        displayGender(sergeyJukov);
 
         Employee tatianaBelay = new Employee("Tatiana", "Belay", LocalDate.of(1970, 10, 3));
         tatianaBelay.setAddress(address3);
         tatianaBelay.setPassport(passport4);
         tatianaBelay.setPosition("Economist");
         tatianaBelay.setSalary(BigDecimal.valueOf(1000));
+        tatianaBelay.setGender(Human.Gender.FEMALE);
+        tatianaBelay.getGender().showGenderName();
+        showGender(tatianaBelay);
 
         Employee olegPetrov = new Employee("Oleg", "Petrov", LocalDate.of(1990, 5, 7));
         olegPetrov.setAddress(address8);
         olegPetrov.setPassport(passport6);
         olegPetrov.setPosition("Manager");
         olegPetrov.setSalary(BigDecimal.valueOf(1500));
+        olegPetrov.setStatus(FamilyStatus.MARRIED);
+        displayFamilyStatus(olegPetrov);
 
         Employee petrNaumov = new Employee("Petr", "Naumov", LocalDate.of(1961, 5, 7));
         petrNaumov.setAddress(address9);
         petrNaumov.setPassport(passport7);
         petrNaumov.setPosition("Accountant");
         petrNaumov.setSalary(BigDecimal.valueOf(2500));
+        petrNaumov.setStatus(FamilyStatus.NOT_MARRIED);
+        displayFamilyStatus(petrNaumov);
+
+        showFamilyStatus();
 
         Project economApartment = new Project("Econom Apartment", LocalDate.of(2022, 6, 1));
         economApartment.setPrice(BigDecimal.valueOf(45000));
@@ -195,7 +219,9 @@ public class MainClass {
         BuildingMaterial metal = new BuildingMaterial("Metal");
         metal.setQuantity(500);
 
-        Source man3110 = new Vehicle("MAN 3110", "V2", LocalDate.of(2015, 1, 31));
+        Vehicle man3110 = new Vehicle("MAN 3110", "V2", LocalDate.of(2015, 1, 31));
+        man3110.setColor(Color.RED);
+        displayColor(man3110);
 
         Source parquet = new BuildingMaterial("Parquet");
 
@@ -205,11 +231,19 @@ public class MainClass {
 
         Source generator = new Equipment("Generator", LocalDate.of(2015, 6, 12));
 
-        Source mercedesBenz = new Vehicle("Mercedes Benz", "V8", LocalDate.of(2022, 1, 31));
+        Vehicle mercedesBenz = new Vehicle("Mercedes Benz", "V8", LocalDate.of(2022, 1, 31));
+        mercedesBenz.setColor(Color.BLACK);
+        displayColor(mercedesBenz);
 
-        Source volkswagen = new Vehicle("Volkswagen Transporter", "V3", LocalDate.of(2016, 10, 15));
+        Vehicle volkswagen = new Vehicle("Volkswagen Transporter", "V3", LocalDate.of(2016, 10, 15));
+        volkswagen.setColor(Color.GREY);
+        displayColor(volkswagen);
 
-        Source bmw = new Vehicle("BMW 7", "V8", LocalDate.of(2022, 10, 15));
+        Vehicle bmw = new Vehicle("BMW 7", "V8", LocalDate.of(2022, 10, 15));
+        bmw.setColor(Color.WHITE);
+        displayColor(bmw);
+
+        showColor();
 
         List<Source> source1 = new ArrayList<>();
         source1.add(bmw);
