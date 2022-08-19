@@ -8,10 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class SortText {
 
@@ -19,6 +16,7 @@ public class SortText {
 
     public static void main(String[] args) {
         File file = new File("src/main/resources/text.txt");
+        File sortText = new File("src/main/resources/sortText.txt");
         try {
             List<String> allWords = new ArrayList<>();
             List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
@@ -39,18 +37,23 @@ public class SortText {
                 List<String> strings = Arrays.asList(split);
                 allWords.addAll(strings);
             }
-
             Collections.sort(allWords);
 
-            int count = 1;
+            Map<String, Integer> wordsMap = new LinkedHashMap<>();
             for (int i = 0; i < allWords.size() - 1; i++) {
-                if (allWords.get(i).equals(allWords.get(i + 1))) {
-                    count++;
+                if (wordsMap.containsKey(allWords.get(i))) {
+                    wordsMap.put(allWords.get(i), wordsMap.get(allWords.get(i)) + 1);
                 } else {
-                    System.out.println(allWords.get(i) + " - " + count);
-                    count = 1;
+                    wordsMap.put(allWords.get(i), 1);
                 }
             }
+            System.out.println(wordsMap);
+
+            List<Map.Entry<String, Integer>> entryList = new ArrayList<>(wordsMap.entrySet());
+            String join = StringUtils.join(entryList, " ");
+
+            FileUtils.writeStringToFile(sortText, join, StandardCharsets.UTF_8);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
