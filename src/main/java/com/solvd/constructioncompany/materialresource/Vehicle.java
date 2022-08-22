@@ -13,6 +13,7 @@ public class Vehicle extends Source implements IMove {
 
     private String engine;
     private LocalDate dateOfRelease;
+    private Color color;
 
     public Vehicle(String title, String engine, LocalDate dateOfRelease) {
         super(title);
@@ -54,6 +55,14 @@ public class Vehicle extends Source implements IMove {
 
     public void setDateOfRelease(LocalDate dateOfRelease) {
         this.dateOfRelease = dateOfRelease;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 
     @Override

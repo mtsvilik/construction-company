@@ -25,6 +25,7 @@ public class Customer extends Human {
         LOGGER.info("Customer budget is " + getBudget());
     }
 
+
     public Address getAddress() {
         return address;
     }
