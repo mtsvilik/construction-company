@@ -40,13 +40,16 @@ public class SortText {
             Collections.sort(allWords);
 
             Map<String, Integer> wordsMap = new LinkedHashMap<>();
-            for (int i = 0; i < allWords.size() - 1; i++) {
-                if (wordsMap.containsKey(allWords.get(i))) {
-                    wordsMap.put(allWords.get(i), wordsMap.get(allWords.get(i)) + 1);
-                } else {
-                    wordsMap.put(allWords.get(i), 1);
-                }
-            }
+            allWords.stream()
+                    .sorted()
+                    .forEach(word -> {
+                        if (wordsMap.containsKey(word)) {
+                            wordsMap.put(word, wordsMap.get(word) + 1);
+                        } else {
+                            wordsMap.put(word, 1);
+                        }
+                    });
+
             System.out.println(wordsMap);
 
             List<Map.Entry<String, Integer>> entryList = new ArrayList<>(wordsMap.entrySet());
