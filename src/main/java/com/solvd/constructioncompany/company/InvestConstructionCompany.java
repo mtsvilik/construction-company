@@ -4,7 +4,6 @@ import com.solvd.constructioncompany.human.Customer;
 import com.solvd.constructioncompany.investment.Investment;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -23,12 +22,10 @@ public class InvestConstructionCompany extends ConstructionCompany {
 
     @Override
     public BigDecimal countAllBudgets(List<Customer> customers) {
-        BigDecimal allBudget = new BigDecimal(BigInteger.ZERO);
-        for (int j = 0; j < customers.size(); j++) {
-            BigDecimal budget = customers.get(j).getBudget();
-            allBudget = allBudget.add(budget);
-        }
-        return allBudget;
+        return customers.stream()
+                .map(Customer::getBudget)
+                .reduce(BigDecimal::add)
+                .orElseThrow();
     }
 
     public List<Investment> getInvestments() {
