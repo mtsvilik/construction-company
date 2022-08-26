@@ -24,9 +24,15 @@ import com.solvd.constructioncompany.project.PromotionProject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,7 +44,7 @@ public class MainClass {
 
     private static final Logger LOGGER = LogManager.getLogger(MainClass.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Passport passport1 = new Passport();
         passport1.setPassportNumber(555444);
         passport1.setDateOfIssue(LocalDate.of(2012, 10, 10));
@@ -166,6 +172,12 @@ public class MainClass {
         olegPetrov.setGender(Human.Gender.MALE);
         displayFamilyStatus(olegPetrov);
 
+        IIncrease increase = employee -> {
+            employee.setSalary(employee.getSalary().multiply(BigDecimal.valueOf(1.5)));
+            return employee;
+        };
+        LOGGER.info(CompanyUtils.increaseSalary(increase, olegPetrov));
+
         Employee petrNaumov = new Employee("Petr", "Naumov", LocalDate.of(1961, 5, 7));
         petrNaumov.setAddress(address9);
         petrNaumov.setPassport(passport7);
@@ -177,17 +189,8 @@ public class MainClass {
 
         showFamilyStatus();
 
-        IIncrease increase = employee -> {
-            employee.setSalary(employee.getSalary().multiply(BigDecimal.valueOf(1.5)));
-            return employee;
-        };
-        LOGGER.info(increase.increaseSalary(petrNaumov));
-        LOGGER.info(increase.increaseSalary(sergeyJukov));
-
         ICheck check = human -> human.getGender().equals(Human.Gender.FEMALE);
-        LOGGER.info(check.checkGender(petrNaumov));
-        LOGGER.info(check.checkGender(olegPetrov));
-        LOGGER.info(check.checkGender(tatianaBelay));
+        LOGGER.info(CompanyUtils.checkGender(check, petrNaumov));
 
         Project economApartment = new Project("Econom Apartment", LocalDate.of(2022, 6, 1));
         economApartment.setPrice(BigDecimal.valueOf(45000));
@@ -462,9 +465,7 @@ public class MainClass {
         pens.add(pen);
 
         Predicate<Integer> quantity = i -> i > 0;
-        LOGGER.info(quantity.test(paper.getQuantity()));
-        LOGGER.info(quantity.test(stapler.getQuantity()));
-        LOGGER.info(quantity.test(pen.getQuantity()));
+        LOGGER.info(CompanyUtils.isPositive(quantity, pen));
 
         PromotionProject<Block, Stapler> modernProject = new PromotionProject<>("Modern Project");
         modernProject.setSquare(250);
@@ -473,8 +474,8 @@ public class MainClass {
         modernProject.setSupplies(staplers);
         LOGGER.info("Square meter of project {} is {}", modernProject.getTitle(), modernProject.countSquareMeterCost(modernProject.getSquare(), modernProject.getPrice()));
 
-        ICount count = (square, price) -> price.divide(new BigDecimal(square));
-        LOGGER.info(count.countSquareMeterCost(modernProject.getSquare(), modernProject.getPrice()));
+        ICount count = project -> project.getPrice().divide(new BigDecimal(project.getSquare()));
+        LOGGER.info(CompanyUtils.countSquare(count, modernProject));
 
         PromotionProject<Module, Paper> moduleProject = new PromotionProject<>("Module Project");
         moduleProject.setSquare(200);
@@ -545,6 +546,28 @@ public class MainClass {
                 .skip(1)
                 .limit(3)
                 .forEach(LOGGER::info);
-    }
 
+        Function<String, Integer> valueConverter = Integer::valueOf;
+        LOGGER.info(CompanyUtils.convert(valueConverter));
+
+        Consumer<String> message = text -> LOGGER.info(text + " - sold");
+        message.accept("Green house project");
+
+        try {
+            Class<Pen> penClass = (Class<Pen>) Class.forName("com.solvd.constructioncompany.materialresource.officesupply.Pen");
+            Constructor<Pen> penConstructor = penClass.getDeclaredConstructor(String.class);
+            Pen mapedPen = penConstructor.newInstance("MAPED pen");
+
+            Method setColor = penClass.getDeclaredMethod("setColor", String.class);
+            Object redPen = setColor.invoke(mapedPen, "Red");
+            Field[] declaredFields = penClass.getDeclaredFields();
+            for (Field declaredField : declaredFields) {
+                declaredField.setAccessible(true);
+                Object value = declaredField.get(mapedPen);
+                System.out.println(value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
