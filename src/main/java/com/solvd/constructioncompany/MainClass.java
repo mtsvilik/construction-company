@@ -13,18 +13,28 @@ import com.solvd.constructioncompany.materialresource.*;
 import com.solvd.constructioncompany.materialresource.material.Block;
 import com.solvd.constructioncompany.materialresource.material.Brick;
 import com.solvd.constructioncompany.materialresource.material.Module;
+import com.solvd.constructioncompany.materialresource.officesupply.OfficeSupply;
 import com.solvd.constructioncompany.materialresource.officesupply.Paper;
 import com.solvd.constructioncompany.materialresource.officesupply.Pen;
 import com.solvd.constructioncompany.materialresource.officesupply.Stapler;
+import com.solvd.constructioncompany.project.ICount;
 import com.solvd.constructioncompany.project.IRun;
 import com.solvd.constructioncompany.project.Project;
 import com.solvd.constructioncompany.project.PromotionProject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.solvd.constructioncompany.human.HumanUtils.*;
 import static com.solvd.constructioncompany.materialresource.MaterialResourceUtils.displayColor;
@@ -34,7 +44,7 @@ public class MainClass {
 
     private static final Logger LOGGER = LogManager.getLogger(MainClass.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Passport passport1 = new Passport();
         passport1.setPassportNumber(555444);
         passport1.setDateOfIssue(LocalDate.of(2012, 10, 10));
@@ -159,7 +169,14 @@ public class MainClass {
         olegPetrov.setPosition("Manager");
         olegPetrov.setSalary(BigDecimal.valueOf(1500));
         olegPetrov.setStatus(FamilyStatus.MARRIED);
+        olegPetrov.setGender(Human.Gender.MALE);
         displayFamilyStatus(olegPetrov);
+
+        IIncrease increase = employee -> {
+            employee.setSalary(employee.getSalary().multiply(BigDecimal.valueOf(1.5)));
+            return employee;
+        };
+        LOGGER.info(CompanyUtils.increaseSalary(increase, olegPetrov));
 
         Employee petrNaumov = new Employee("Petr", "Naumov", LocalDate.of(1961, 5, 7));
         petrNaumov.setAddress(address9);
@@ -167,9 +184,13 @@ public class MainClass {
         petrNaumov.setPosition("Accountant");
         petrNaumov.setSalary(BigDecimal.valueOf(2500));
         petrNaumov.setStatus(FamilyStatus.NOT_MARRIED);
+        petrNaumov.setGender(Human.Gender.MALE);
         displayFamilyStatus(petrNaumov);
 
         showFamilyStatus();
+
+        ICheck check = human -> human.getGender().equals(Human.Gender.FEMALE);
+        LOGGER.info(CompanyUtils.checkGender(check, petrNaumov));
 
         Project economApartment = new Project("Econom Apartment", LocalDate.of(2022, 6, 1));
         economApartment.setPrice(BigDecimal.valueOf(45000));
@@ -274,12 +295,7 @@ public class MainClass {
         companyEmployees.add(sergeyJukov);
         companyEmployees.add(tatianaBelay);
         company1.setEmployees(companyEmployees);
-        List<Project> companyProjects = new ArrayList<>();
-        companyProjects.add(economApartment);
-        companyProjects.add(standardApartment);
-        companyProjects.add(premiumApartment);
-        companyProjects.add(penthouse);
-        companyProjects.add(greenHouse);
+        List<Project> companyProjects = List.of(economApartment, standardApartment, premiumApartment, penthouse, greenHouse, sunnyHouse);
         company1.setProjects(companyProjects);
         List<Source> companyBuildingMaterials = new ArrayList<>();
         companyBuildingMaterials.add(concrete);
@@ -295,6 +311,12 @@ public class MainClass {
         company1.setSources(companyVehicles);
         company1.showCompanyName();
         company1.showCompanyName(company1);
+
+        List<Project> collect = companyProjects.stream()
+                .filter(project -> project.equals(penthouse))
+                .collect(Collectors.toList());
+        LOGGER.info(collect);
+
         LOGGER.info("---------------------------------");
 
         Investment stocks = new Investment("Stocks", LocalDate.of(2025, 12, 31));
@@ -417,12 +439,22 @@ public class MainClass {
         Stapler stapler = new Stapler("MAPED stapler");
         stapler.setSize("Big");
         stapler.setQuantity(3);
-        List<Stapler> staplers = new ArrayList<>();
-        staplers.add(stapler);
+
+        Stapler stapler2 = new Stapler("MAPED2 stapler");
+        stapler2.setSize("Small");
+        stapler2.setQuantity(5);
+
+        List<Stapler> staplers = List.of(stapler, stapler2);
+        int allQuantity = staplers.stream()
+                .filter(stapler3 -> stapler3.getQuantity() > 0)
+                .mapToInt(OfficeSupply::getQuantity)
+                .peek(LOGGER::info)
+                .sum();
+        LOGGER.info(allQuantity);
 
         Paper paper = new Paper("DELROY paper");
         paper.setClassOfPaper("A");
-        paper.setQuantity(4);
+        paper.setQuantity(0);
         List<Paper> papers = new ArrayList<>();
         papers.add(paper);
 
@@ -432,12 +464,18 @@ public class MainClass {
         List<Pen> pens = new ArrayList<>();
         pens.add(pen);
 
+        Predicate<Integer> quantity = i -> i > 0;
+        LOGGER.info(CompanyUtils.isPositive(quantity, pen));
+
         PromotionProject<Block, Stapler> modernProject = new PromotionProject<>("Modern Project");
         modernProject.setSquare(250);
         modernProject.setPrice(BigDecimal.valueOf(300));
         modernProject.setMaterials(blocks);
         modernProject.setSupplies(staplers);
         LOGGER.info("Square meter of project {} is {}", modernProject.getTitle(), modernProject.countSquareMeterCost(modernProject.getSquare(), modernProject.getPrice()));
+
+        ICount count = project -> project.getPrice().divide(new BigDecimal(project.getSquare()));
+        LOGGER.info(CompanyUtils.countSquare(count, modernProject));
 
         PromotionProject<Module, Paper> moduleProject = new PromotionProject<>("Module Project");
         moduleProject.setSquare(200);
@@ -469,13 +507,9 @@ public class MainClass {
         drivers.add(driver2);
         drivers.add(driver3);
         LOGGER.info("Set size is {}", drivers.size());
-        for (Human driver : drivers) {
-            LOGGER.info("Information about the driver: {} {} {} ", driver.getFirstName(), driver.getLastName(), driver.getDob());
-        }
+        drivers.forEach(driver -> LOGGER.info("Information about the driver: {} {} {} ", driver.getFirstName(), driver.getLastName(), driver.getDob()));
         drivers.add(driver1);
-        for (Human isAdded : drivers) {
-            LOGGER.info(isAdded);
-        }
+        drivers.forEach(LOGGER::info);
 
         LOGGER.info("---------------------------------");
 
@@ -485,22 +519,55 @@ public class MainClass {
         info.put(passport5, customer3);
         Customer second = info.get(passport2);
         LOGGER.info(second);
-        for (Map.Entry<Passport, Customer> element : info.entrySet()) {
-            LOGGER.info("Key: {}, Value: {}", element.getKey(), element.getValue());
-        }
+        info.forEach((key, value) -> LOGGER.info("Key: {}, Value: {}", key, value));
 
         LOGGER.info("---------------------------------");
 
         LOGGER.info("Customer 1 options: ");
         List<Project> result = CompanyUtils.selectProjects(customer1.getBudget(), company1);
-        for (Project project : result) {
-            LOGGER.info(project.getProjectTitle());
-        }
+        result.forEach(project -> LOGGER.info(project.getProjectTitle()));
 
         LOGGER.info("Customer 2 options: ");
         List<Project> result2 = CompanyUtils.selectProjects(customer2.getBudget(), company1);
-        for (Project project : result2) {
-            LOGGER.info(project.getProjectTitle());
+        result2.forEach(project -> LOGGER.info(project.getProjectTitle()));
+
+        List<String> strings = List.of("Minsk", "Vitebsk", "Mogilev", "Gomel", "Grodno", "Brest");
+        List<String> i = strings.stream()
+                .filter(string -> string.length() > 6)
+                .filter(string -> string.contains("i"))
+                .peek(LOGGER::info)
+                .collect(Collectors.toList());
+
+        List<String> strings2 = List.of("60", "23", "12", "33", "90", "66", "99");
+        strings2.stream()
+                .map(Integer::valueOf)
+                .filter(value -> value % 3 == 0)
+                .sorted()
+                .skip(1)
+                .limit(3)
+                .forEach(LOGGER::info);
+
+        Function<String, Integer> valueConverter = Integer::valueOf;
+        LOGGER.info(CompanyUtils.convert(valueConverter));
+
+        Consumer<String> message = text -> LOGGER.info(text + " - sold");
+        message.accept("Green house project");
+
+        try {
+            Class<Pen> penClass = (Class<Pen>) Class.forName("com.solvd.constructioncompany.materialresource.officesupply.Pen");
+            Constructor<Pen> penConstructor = penClass.getDeclaredConstructor(String.class);
+            Pen mapedPen = penConstructor.newInstance("MAPED pen");
+
+            Method setColor = penClass.getDeclaredMethod("setColor", String.class);
+            Object redPen = setColor.invoke(mapedPen, "Red");
+            Field[] declaredFields = penClass.getDeclaredFields();
+            for (Field declaredField : declaredFields) {
+                declaredField.setAccessible(true);
+                Object value = declaredField.get(mapedPen);
+                System.out.println(value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
