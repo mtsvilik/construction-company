@@ -3,23 +3,23 @@ package com.solvd.constructioncompany.connectionpool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ConnectionPool {
 
     private static final Logger LOGGER = LogManager.getLogger(ConnectionPool.class);
 
-    private static final int POOL_SIZE = 5;
-
     private static ConnectionPool INSTANCE;
 
-    private final List<Connection> connections;
+    private final BlockingQueue<Connection> freeConnections;
+    private final BlockingQueue<Connection> givenAwayConnections;
 
     private ConnectionPool(int size) {
-        connections = new ArrayList<>();
+        freeConnections = new LinkedBlockingQueue<>(size);
+        givenAwayConnections = new LinkedBlockingQueue<>(size);
         for (int i = 0; i < size; i++) {
-            connections.add(new Connection());
+            freeConnections.add(new Connection());
         }
     }
 
@@ -31,14 +31,21 @@ public class ConnectionPool {
     }
 
     public synchronized Connection getConnection() {
-        Connection connection = new Connection();
-        INSTANCE.connections.remove(connections.size() - 1);
-        LOGGER.info(INSTANCE.connections.size() + " size after get connection");
+        Connection connection = null;
+        try {
+            connection = freeConnections.take();
+            givenAwayConnections.offer(connection);
+        } catch (InterruptedException e) {
+            LOGGER.error(e);
+        }
         return connection;
     }
 
     public void releaseConnection(Connection connection) {
-        INSTANCE.connections.add(connection);
-        LOGGER.info(connections.size() + " size after release connection");
+        givenAwayConnections.remove(connection);
+        LOGGER.info("Size of givenAwayConnections " + givenAwayConnections.size());
+
+        freeConnections.offer(connection);
+        LOGGER.info("Size of freeConnections " + freeConnections.size());
     }
 }
